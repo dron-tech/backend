@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.16" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.5">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\AppleAuth\AppleAuth.csproj" />
+      <ProjectReference Include="..\Application\Application.csproj" />
+      <ProjectReference Include="..\AwsS3\AwsS3.csproj" />
+      <ProjectReference Include="..\Domain\Domain.csproj" />
+      <ProjectReference Include="..\Email\Email.csproj" />
+      <ProjectReference Include="..\FileStorage\FileStorage.csproj" />
+      <ProjectReference Include="..\Moralis\Moralis.csproj" />
+      <ProjectReference Include="..\NftMetadataLoader\NftMetadataLoader.csproj" />
+      <ProjectReference Include="..\Persistence\Persistence.csproj" />
+      <ProjectReference Include="..\SmartContract\SmartContract.csproj" />
+      <ProjectReference Include="..\ThirdPartyAuthService\ThirdPartyAuthService.csproj" />
+    </ItemGroup>
+
+</Project>

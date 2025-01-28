@@ -1,0 +1,90 @@
+version: "3.8"
+x-logging: &logging
+  logging:
+    driver: loki
+    options:
+      loki-url: "http://localhost:3200/loki/api/v1/push"
+      loki-external-labels: "type=dev,repo=${COMPOSE_PROJECT_NAME},job=docker,container_name={{.Name}}"
+
+services:
+  backend:
+    <<: *logging
+    build:
+      context: .
+      args:
+        - DOTNET_ENVIRONMENT=$DOTNET_ENVIRONMENT
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Context=User ID=${DB_USERNAME}; Password=${DB_PASSWORD}; Host=pg_db; Port=5432; Database=${DB_NAME}; Pooling=true
+    depends_on:
+      - pg_db
+    labels:
+      - "custom.label=${COMPOSE_PROJECT_NAME}"
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.entrypoints=web"
+      - "io.portainer.accesscontrol.teams=devs,managers"
+    volumes:
+      - public:/app/wwwroot
+    networks:
+      - default
+
+  pg_db:
+    <<: *logging
+    image: postgres:13
+    restart: unless-stopped
+    labels:
+      - "io.portainer.accesscontrol.teams=devs,managers"
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      proxy:
+        aliases:
+          - ${COMPOSE_PROJECT_NAME}
+      default:
+
+  traefik:
+    <<: *logging
+    image: traefik:2.7
+    command:
+      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.constraints=Label(`custom.label`,`${COMPOSE_PROJECT_NAME}`)"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=${COMPOSE_PROJECT_NAME}"
+      - "--entrypoints.web.address=:80"
+    labels:
+      - "io.portainer.accesscontrol.teams=devs,managers"
+    ports:
+      - "${WEB_PORT:-80}"
+      - "127.0.0.1::8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - default
+
+volumes:
+  public:
+    labels:
+      - "io.portainer.accesscontrol.teams=devs,managers"
+  pgdata:
+    labels:
+      - "io.portainer.accesscontrol.teams=devs,managers"
+
+networks:
+  default:
+    name: ${COMPOSE_PROJECT_NAME}
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.56.0.0/24
+    labels:
+      - "io.portainer.accesscontrol.teams=devs,managers"
+  proxy:
+    external: true
